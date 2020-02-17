@@ -17,23 +17,14 @@ def put_title(filename1, filename2):
 def put_line(tmplist, position):
     
     if position == 0:
-        str = tmplist[0].ljust(8) + "|" + tmplist[1].ljust(45) + "|" + tmplist[3].center(30) + '|' + "None".center(30) + '|'
+        str = tmplist[0].ljust(8) + "|" + tmplist[1].ljust(45) + "|" + tmplist[3].center(30) + '|' + "None".center(30) + '|' + tmplist[4].center(30) + '|'
     else:
-        str = tmplist[0].ljust(8) + "|" + tmplist[1].ljust(45) + "|" + "None".center(30) + "|" + tmplist[3].center(30) + "|"
-    
-    index = 4
-    while index < len(tmplist):
-      str = str + " " + tmplist[index]
-      index += 1
+        str = tmplist[0].ljust(8) + "|" + tmplist[1].ljust(45) + "|" + "None".center(30) + "|" + tmplist[3].center(30) + "|" + tmplist[4].center(30) + '|'
 
     output_contents.append(str)
 
 def put_line_with_other_value(tmplist, value):
-    str = tmplist[0].ljust(8) + "|" + tmplist[1].ljust(45) + "|" + tmplist[3].center(30) + "|" + value.center(30) + "|"
-    index = 4
-    while index < len(tmplist):
-      str = str + " " + tmplist[index]
-      index += 1
+    str = tmplist[0].ljust(8) + "|" + tmplist[1].ljust(45) + "|" + tmplist[3].center(30) + "|" + value.center(30) + "|" + tmplist[4].center(30) + '|'
     output_contents.append(str)
 
 def show_output(out):
@@ -48,7 +39,10 @@ def get_line_by_name(name, filename):
     for line in file:
         line = line.strip()
         tmplist = line.split()
-        if len(tmplist) < 5:
+
+        if len(tmplist) <= 3:
+             continue
+        if tmplist[2] != '=':
              continue
         if tmplist[1] == name:
             file.close()
@@ -59,17 +53,23 @@ def get_line_by_name(name, filename):
 #filter flag name only in one file
 def filter_flag_name(filename1, filename2):
     tmplist = []
-
+    index = 0
     file = open(filename1)
     for line in file:
         line = line.strip()
         tmplist = line.split()
-        if len(tmplist) == 5:
+
+        if len(tmplist) <= 3:
+             continue
+        if tmplist[2] != "=":
+             continue
+        if tmplist[3][0] == "{":
             tmplist.insert(3, "__")
-        elif len(tmplist) > 5:
-            pass
-        else:
-            continue
+        index = 5
+        while index < len(tmplist):
+            tmplist[4] = tmplist[4] + " " + tmplist[index]
+            index += 1
+
         result = get_line_by_name(tmplist[1], filename2)
         if result == None:
             put_line(tmplist, 0)
@@ -80,12 +80,18 @@ def filter_flag_name(filename1, filename2):
     for line in file:
         line = line.strip()
         tmplist = line.split()
-        if len(tmplist) == 5:
+
+        if len(tmplist) <= 3:
+             continue
+        if tmplist[2] != "=":
+             continue
+        if tmplist[3][0] == "{":
             tmplist.insert(3, "__")
-        elif len(tmplist) > 5:
-            pass
-        else:
-            continue
+        index = 5
+        while index < len(tmplist):
+            tmplist[4] = tmplist[4] + " " + tmplist[index]
+            index += 1
+
         result = get_line_by_name(tmplist[1], filename1)
         if result == None:
             put_line(tmplist, 1)
@@ -97,28 +103,40 @@ def filter_flag_value(filename1, filename2):
     tmplist = []
     otherlist = []
     result = ""
+    index = 0
 
     file = open(filename1)
     for line in file:
         line = line.strip()
         tmplist = line.split()
-        if len(tmplist) == 5:
+
+        if len(tmplist) <= 3:
+             continue
+        if tmplist[2] != "=":
+             continue
+        if tmplist[3][0] == '{':
             tmplist.insert(3, "__")
-        elif len(tmplist) > 5:
-            pass
-        else:
-            continue
+        index = 5
+        while index < len(tmplist):
+            tmplist[4] = tmplist[4] + " " + tmplist[index]
+            index += 1
+
         result = get_line_by_name(tmplist[1], filename2)
-        
 
         if result != None:
             otherlist = result.split()
-            if len(otherlist) == 5:
-                otherlist.insert(3, "__")
-            elif len(otherlist) > 5:
-                pass
-            else:
+
+            if len(otherlist) <= 3:
                 continue
+            if otherlist[2] != "=":
+                continue
+            if otherlist[3][0] == '{':
+                otherlist.insert(3, "__")
+            index = 5
+            while index < len(otherlist):
+                otherlist[4] = otherlist[4] + " " + otherlist[index]
+                index += 1
+
             if (otherlist[1] == tmplist[1]) and (result != line):
                 put_line_with_other_value(tmplist, otherlist[3])
     file.close()
